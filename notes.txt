@@ -1,0 +1,116 @@
+Protocole ICMP
+inetutils-ping
+getaddrinfo (DNS)
+command setcap cap_net_raw+ep <executable> -> droits root pour un executable
+tcpdump pour surveiller le trafic ICMP
+SOCK_RAW ou SOCK_DGRAM ?
+
+cas particuliers:
+- ping 0 -> ping 127.0.0.1
+- ping 1 -> ping 0.0.0.1
+
+
+a. Résolution DNS (si un nom de domaine est utilisé)
+
+Si l'argument est un nom de domaine (ex: google.com), ping commence par résoudre ce
+nom en adresse IP via une requête DNS (Domain Name System).
+
+Exemple : google.com → 142.250.179.46 (l'adresse peut varier selon la localisation).
+
+
+b. Envoi des paquets ICMP
+
+ping envoie un paquet ICMP Echo Request (type 8) à l'adresse IP cible.
+Par défaut, la taille du paquet est de 56 octets (64 octets en incluant l'en-tête ICMP).
+Le champ TTL (Time To Live) est défini (par défaut, souvent 64 ou 128 selon le système).
+Ce champ limite le nombre de sauts (routeurs) que le paquet peut traverser avant d'être
+abandonné.
+
+
+c. Réception de la réponse
+
+Si la machine cible est active et autorise les réponses ICMP, elle renvoie un paquet
+Echo Reply (type 0).
+ping calcule le RTT (temps aller-retour) en millisecondes (ms).
+
+
+d. Affichage des résultats
+
+Pour chaque paquet :
+Taille du paquet (ex: 64 bytes).
+Adresse IP cible.
+TTL (ex: ttl=56).
+Temps de réponse (ex: time=12.3 ms).
+Statistiques globales après interruption (via Ctrl+C) :Nombre de paquets envoyés/reçus.
+Pourcentage de perte (packet loss).
+Temps minimum/moyen/maximum de réponse.
+
+struct hostent {
+    char  *h_name;       /* Nom officiel de l'hôte */
+    char **h_aliases;    /* Liste des autres noms (alias) */
+    int    h_addrtype;   /* Type d'adresse (ex: AF_INET) */
+    int    h_length;     /* Taille de l'adresse en octets */
+    char **h_addr_list;  /* Liste des adresses IP de l'hôte */
+};
+
+struct sockaddr_in {
+    short            sin_family;   // e.g. AF_INET
+    unsigned short   sin_port;     // e.g. htons(3490)
+    struct in_addr   sin_addr;     // see struct in_addr, below
+    char             sin_zero[8];  // zero this if you want to
+};
+
+struct in_addr {
+    in_addr_t s_addr; // Entier non signé de 32 bits
+};
+
+struct icmphdr {
+    uint8_t type;       /* Type de message ICMP */
+    uint8_t code;       /* Sous-type associé au type */
+    uint16_t checksum;  /* Somme de contrôle */
+    union {
+        struct {
+            uint16_t id;
+            uint16_t sequence;
+        } echo;         /* Utilisé pour les requêtes/réponses Echo (ping) */
+        uint32_t gateway; /* Adresse de la passerelle (redirection) */
+        struct {
+            uint16_t __unused;
+            uint16_t mtu;
+        } frag;         /* Découverte de la MTU du chemin */
+    } un;
+};
+
+struct iphdr
+  {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    unsigned int ihl:4;
+    unsigned int version:4;
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    unsigned int version:4;
+    unsigned int ihl:4;
+#else
+# error        "Please fix <bits/endian.h>"
+#endif
+    u_int8_t tos;
+    u_int16_t tot_len;
+    u_int16_t id;
+    u_int16_t frag_off;
+    u_int8_t ttl;
+    u_int8_t protocol;
+    u_int16_t check;
+    u_int32_t saddr;
+    u_int32_t daddr;
+    /*The options start here. */
+  };
+
+struct addrinfo {
+               int              ai_flags;
+               int              ai_family;
+               int              ai_socktype;
+               int              ai_protocol;
+               socklen_t        ai_addrlen;
+               struct sockaddr *ai_addr;
+               char            *ai_canonname;
+               struct addrinfo *ai_next;
+           };
