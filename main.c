@@ -1,63 +1,18 @@
 #include "ft_ping.h"
 
-int	set_ping(t_ping* p, int ac, char**av)
-{
-	if (ac < 2)
-		return USAGE_DESTADDR_REQ;
-
-	char*	dest = NULL;
-
-	for (int i = 1; i < ac; i++)
-	{
-		if (*av[i] == '-')
-		{
-			// flag -v
-			// flag -h / -?
-		}
-		else if (!dest)
-			dest = av[1]; // dup ?
-		else
-			return RECRTE_OPNOTPERM;
+int	main(int argc, char** argv) {
+	t_ping*	p = t_ping_construct(argc, argv);
+	if (!p) {
+		dprintf(2, "Memory allocation error\n");
+		return -1;
 	}
-}
+	t_ping_print(p);
+	if (p->err)
+		return t_ping_destruct(p);
 
-int	main(int argc, char** argv)
-{
-// parse args
-	t_ping	p;
-	set_ping(&p, argc, argv)
+//	return t_ping_destruct(p);
 
-// DNS resolution
-	addrinfo	hints, *result;
-	bzero(&hints, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_RAW;
-
-	int gai = getaddrinfo(argv[1], NULL, &hints, &result);
-	if (gai != 0)
-	{
-		printf("Error: getaddrinfo: %s\n", gai_strerror(gai));
-		return (1);
-	}
-
-	for (addrinfo* rp = result; rp != NULL; rp = rp->ai_next)
-	{
-		print_ip_address(rp->ai_addr, rp->ai_addrlen);
-	}
-
-	freeaddrinfo(result);
-
-//	return (0); //////// TEST
-
-// set socket fd
-	// SOCK_RAW needs root
-	int	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-	if (sockfd < 0)
-	{
-		printf("Error socket\n");
-		return (1);
-	}
-
+	// packets....
 // set sockaddr_in
     sockaddr_in  destaddr;
 	bzero(&destaddr, sizeof(destaddr));
@@ -66,9 +21,13 @@ int	main(int argc, char** argv)
 	if (inet_pton(AF_INET, argv[1], &destaddr.sin_addr) <= 0)
 	{
 		printf("Error inet_pton\n");
-		close(sockfd);
+	//	close(sockfd);
 		return (2);
 	}
+
+//	return t_ping_destruct(p);
+
+	int sockfd = p->sockfd;
 
 // set packet to send
 	char	packet[64];

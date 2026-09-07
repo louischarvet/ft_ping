@@ -15,9 +15,10 @@ unsigned short checksum(void *b, int len) {
     return result;
 }
 
-void print_ip_address(struct sockaddr *addr, socklen_t addrlen) {
-    char ipstr[INET6_ADDRSTRLEN];
+void print_ip_address(struct sockaddr* addr, socklen_t addrlen) {
+    char ipstr[INET_ADDRSTRLEN];
     void *addr_ptr;
+	(void) addrlen;
 
     if (addr->sa_family == AF_INET) {
         struct sockaddr_in *ipv4 = (struct sockaddr_in *)addr;
